@@ -8,7 +8,7 @@ var logger = require('morgan');
 var favicon = require('serve-favicon');
 var HttpError = require('./error').HttpError;
 var config = require('./config');
-//var log = require('./libs/log')(module);
+var log = require('./libs/log')(module);
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
@@ -32,7 +32,7 @@ var sess = {
     secret: config.get('session:secret'),
     key: config.get('session:key'),
     cookie: {},
-    store: new MongoStore({ mongooseConnection: mongoose.connection })
+    store: new MongoStore({ mongooseConnection: mongoose.connection }),
 };
 
 if (app.get('env') === 'production') {
@@ -42,19 +42,20 @@ if (app.get('env') === 'production') {
 
 app.use(session(sess));
 
-app.use(function(req, res, next){
-  req.session.numberOfVisits = req.session.numberOfVisits +1 || 1;
-  res.send("Visits: " + req.session.numberOfVisits);
-})
+// app.use(function(req, res, next){
+//   req.session.numberOfVisits = req.session.numberOfVisits +1 || 1;
+//   res.send("Visits: " + req.session.numberOfVisits);
+// })
 
 ///////////////////////////////////////////
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-var faviconPath = path.join(__dirname, 'public', 'favicon.ico');
-app.use(favicon(faviconPath));
+app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 
 app.use(require('./middleware/sendHttpError'));
+
+app.use(require('./middleware/loadUser'));
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
@@ -67,17 +68,48 @@ app.use(function (req, res, next) {
 app.use(function (err, req, res, next) {
     if (typeof err == 'number') {
         // next(404);
-        err = new HttpError(err);
+        err = new HttpError(err, "Wrong password!");
+        //res.render('error');
+
     }
 
     if (err instanceof HttpError) {
         res.sendHttpError(err);
     } else {
-        //log.error(err);
-        err = new HttpError(500);
-        res.sendHttpError(err);
+        if (app.get('env') == 'development') {
+            //express.errorHandler()(err, req, res, next);
+            res.locals.message = err.message;
+            res.locals.error = req.app.get('env') === 'development' ? err : {};
+
+            // render the error page
+            res.status(err.status || 500);
+            res.render('error');
+            //res.send("error")
+            //res.redirect('/');
+            
+        } else {
+            log.error(err);
+            err = new HttpError(500);
+            res.sendHttpError(err);
+        }
     }
 });
+
+// My modifiet Kantor error handler
+// app.use(function (err, req, res, next) {
+//     if (typeof err == 'number') {
+//         // next(404);
+//         err = new HttpError(err);
+//     }
+
+//     if (err instanceof HttpError) {
+//         res.sendHttpError(err);
+//     } else {
+//         //log.error(err);
+//         err = new HttpError(500);
+//         res.sendHttpError(err);
+//     }
+// });
 
 // Standart Express error handler
 // app.use(function(err, req, res, next) {
