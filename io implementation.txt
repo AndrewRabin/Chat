@@ -1,0 +1,78 @@
+Here is how you can add Socket.io to a newly generated Express-Generator application:
+
+Create a file that will contain your socket.io logic, for example socketapi.js:
+socketapi.js:
+
+const io = require( "socket.io" )();
+const socketapi = {
+    io: io
+};
+
+// Add your socket.io logic here!
+io.on( "connection", function( socket ) {
+    console.log( "A user connected" );
+});
+// end of socket.io logic
+
+module.exports = socketapi;
+Modify your bin/www launcher. There are two steps: requiring your Socket.io api and attaching the HTTP server to your socket.io instance right after creating the HTTP server:
+bin/www:
+
+/**
+ * Module dependencies.
+ */
+
+var app = require('../app');
+var debug = require('debug')('socketexpress:server');
+var http = require('http');
+let socketapi = require("../socketapi"); // <== Add this line
+
+/**
+ * Get port from environment and store in Express.
+ */
+
+var port = normalizePort(process.env.PORT || '3000');
+app.set('port', port);
+
+/**
+ * Create HTTP server.
+ */
+
+var server = http.createServer(app);
+socketapi.io.attach(server); // <== Also add this line
+
+(...)
+Then you just need to add the Socket.io client in your index.html. Add the following just before the </body> closing tag:
+index.html
+
+    (...)
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        var socket = io();
+    </script>
+</body>
+</html>
+Finally you can start your Express server:
+Unix based: DEBUG=myapp:* npm start
+Windows: set DEBUG=myapp:* & npm start
+Note 1
+
+If for any reason you need access to your socket api in your app.js, then you could instead import your socket api in app.js, and re-export it:
+
+app.js
+
+var express = require('express');
+var socketapi = require("./socketapi"); // <== Add this line
+(...)
+// You can now access socket.io through the socketapi.io object
+(...)
+module.exports = { app, socketapi }; // <== Export your app and re-export your socket API here
+Then in your bin/www launcher, instead of importing your socket api on its own line, just import it along your app:
+
+bin/www
+
+var {app, socketapi} = require('../app'); // <== Import your app and socket api like this
+(...)
+var server = http.createServer(app);
+socketapi.io.attach(server); // <== You still have to attach your HTTP server to your socket.io instance
+Note 2 This answer was updated to work with the latest Express Generator (4.16 at time of writing) and latest Socket.io (3.0.5 at time of writing).
