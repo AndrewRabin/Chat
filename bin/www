@@ -9,6 +9,7 @@ var app = require('../app');
 var debug = require('debug')('chat:server');
 var http = require('http');
 
+var socketapi = require("../libs/socketapi");
 
 /**
  * Get port from environment and store in Express.
@@ -22,6 +23,9 @@ app.set('port', config.get('port'));
  */
 
 var server = http.createServer(app);
+socketapi.io.attach(server);
+
+
 
 /**
  * Listen on provided port, on all network interfaces.
