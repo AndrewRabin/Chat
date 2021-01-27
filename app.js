@@ -31,7 +31,7 @@ var MongoStore = require('connect-mongo')(session);
 var sess = {
     secret: config.get('session:secret'),
     key: config.get('session:key'),
-    cookie: {},
+    cookie: config.get('session:cookie'),
     store: new MongoStore({ mongooseConnection: mongoose.connection }),
 };
 

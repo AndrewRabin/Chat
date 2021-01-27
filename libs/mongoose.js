@@ -1,11 +1,9 @@
 var mongoose = require('mongoose');
 var config = require('../config');
 
-var ARurl = config.get('mongoose:local');
-
-console.log(`DB CONNECTION URL: ${ARurl}`);
-
-mongoose.connect(ARurl,
-                 config.get('mongoose:options'));
+mongoose.connect(config.get('mongoose:local'),
+                 config.get('mongoose:options'),
+                 (err)=>{if(!err) console.log("DB connected to " + 
+                                    config.get('mongoose:local'));});
 
 module.exports = mongoose;

@@ -11,6 +11,11 @@
     },
     "session": {
         "secret": "KillerIsJim",
-        "key": "sid"
+        "key": "sid",
+        "cookie": {
+            "path": "/",
+            "httpOnly": "false",
+            "maxAge": null
+        }
     }
 }
