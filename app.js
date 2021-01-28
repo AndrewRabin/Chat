@@ -13,6 +13,8 @@ var log = require('./libs/log')(module);
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 
+
+
 var app = express();
 
 // view engine setup
@@ -26,13 +28,16 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
 //////////////////////// session //////////////////
-var MongoStore = require('connect-mongo')(session);
+//var MongoStore = require('connect-mongo')(session);
+var sessionStore = require('./libs/sessionStore')(session);
+
 
 var sess = {
     secret: config.get('session:secret'),
     key: config.get('session:key'),
     cookie: config.get('session:cookie'),
-    store: new MongoStore({ mongooseConnection: mongoose.connection }),
+    //store: new MongoStore({ mongooseConnection: mongoose.connection }),
+    store: sessionStore
 };
 
 if (app.get('env') === 'production') {
